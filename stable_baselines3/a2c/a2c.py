@@ -149,6 +149,21 @@ class A2C(OnPolicyAlgorithm):
 
             # Policy gradient loss
             policy_loss = -(advantages * log_prob).mean()
+            if False:
+            # if True:
+                print('advantages', advantages, 'log_prob', log_prob)
+                print('policy_loss', policy_loss)
+                policy_loss.backward()
+                for name, param in self.policy.named_parameters():
+                    if param.requires_grad:
+                        # layer_param_sum = round(param.data.sum().item(), 4)
+                        # print(f"{name}'s sum = {layer_param_sum}")
+                        if param.grad is None:
+                            print(name, None)
+                        else:
+                            layer_grad_sum = round(param.grad.sum().item(), 4)
+                            print(f"{name}'s grad sum = {layer_grad_sum}")
+                import sys; sys.exit(0)
 
             # Value loss using the TD(gae_lambda) target
             value_loss = F.mse_loss(rollout_data.returns, values)

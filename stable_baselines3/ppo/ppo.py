@@ -194,6 +194,7 @@ class PPO(OnPolicyAlgorithm):
 
         # train for n_epochs epochs
         for epoch in range(self.n_epochs):
+            print('epoch', epoch)
             approx_kl_divs = []
             # Do a complete pass on the rollout buffer
             for rollout_data in self.rollout_buffer.get(self.batch_size):
@@ -214,12 +215,41 @@ class PPO(OnPolicyAlgorithm):
                     advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
                 # ratio between old and new policy, should be one at the first iteration
+                # policy_loss = th.exp(log_prob - rollout_data.old_log_prob).mean()
+                # policy_loss = (log_prob - rollout_data.old_log_prob).mean()
+                # policy_loss = (log_prob - 0).mean()
                 ratio = th.exp(log_prob - rollout_data.old_log_prob)
+                print('ratio', ratio)
+                # ratio = (log_prob - rollout_data.old_log_prob)
+                # ratio = (log_prob - 1)
+                # ratio = (log_prob - 0)
+                # ratio = (log_prob - 10000)
+                # ratio = (log_prob - rollout_data.old_log_prob).mean()
+                # ratio = (log_prob - 10000000).mean()
+                # ratio = (log_prob).mean()
 
                 # clipped surrogate loss
                 policy_loss_1 = advantages * ratio
                 policy_loss_2 = advantages * th.clamp(ratio, 1 - clip_range, 1 + clip_range)
                 policy_loss = -th.min(policy_loss_1, policy_loss_2).mean()
+                # policy_loss = - policy_loss_1.mean()
+                print('policy_loss', policy_loss)
+                if False:
+                # if True:
+                # if epoch == 1:
+                    print('advantages', advantages, 'log_prob', log_prob, 'rollout_data.old_log_prob', rollout_data.old_log_prob)
+                    print('policy_loss', policy_loss)
+                    policy_loss.backward()
+                    for name, param in self.policy.named_parameters():
+                        if param.requires_grad:
+                            if param.grad is None:
+                                print(name, None)
+                            else:
+                                # layer_param_sum = round(param.data.sum().item(), 4)
+                                # print(f"{name}'s sum = {layer_param_sum}")
+                                layer_grad_sum = round(param.grad.sum().item(), 4)
+                                print(f"{name}'s grad sum = {layer_grad_sum}")
+                    import sys; sys.exit(0)
 
                 # Logging
                 pg_losses.append(policy_loss.item())
