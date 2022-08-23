@@ -43,10 +43,12 @@ def is_image_space(
     if isinstance(observation_space, spaces.Box) and len(observation_space.shape) == 3:
         # Check the type
         if observation_space.dtype != np.uint8:
+            print('observation space dtype not uint8')
             return False
 
         # Check the value range
         if np.any(observation_space.low != 0) or np.any(observation_space.high != 255):
+            print('value range not 0-255')
             return False
 
         # Skip channels check
@@ -58,7 +60,10 @@ def is_image_space(
         else:
             n_channels = observation_space.shape[-1]
         # RGB, RGBD, GrayScale
-        return n_channels in [1, 3, 4]
+        if n_channels not in [1, 3, 4]:
+            print('n channels not in 1,3,4')
+            return False
+        return True
     return False
 
 

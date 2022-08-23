@@ -194,10 +194,11 @@ class PPO(OnPolicyAlgorithm):
 
         # train for n_epochs epochs
         for epoch in range(self.n_epochs):
-            print('epoch', epoch)
+            print('\nepoch', epoch)
             approx_kl_divs = []
             # Do a complete pass on the rollout buffer
             for rollout_data in self.rollout_buffer.get(self.batch_size):
+                print('.', end='', flush=True)
                 actions = rollout_data.actions
                 if isinstance(self.action_space, spaces.Discrete):
                     # Convert discrete action from float to long
@@ -219,7 +220,7 @@ class PPO(OnPolicyAlgorithm):
                 # policy_loss = (log_prob - rollout_data.old_log_prob).mean()
                 # policy_loss = (log_prob - 0).mean()
                 ratio = th.exp(log_prob - rollout_data.old_log_prob)
-                print('ratio', ratio)
+                # print('ratio', ratio)
                 # ratio = (log_prob - rollout_data.old_log_prob)
                 # ratio = (log_prob - 1)
                 # ratio = (log_prob - 0)
@@ -233,23 +234,24 @@ class PPO(OnPolicyAlgorithm):
                 policy_loss_2 = advantages * th.clamp(ratio, 1 - clip_range, 1 + clip_range)
                 policy_loss = -th.min(policy_loss_1, policy_loss_2).mean()
                 # policy_loss = - policy_loss_1.mean()
-                print('policy_loss', policy_loss)
-                if False:
+                # print('policy_loss', policy_loss)
+                # if False:
                 # if True:
                 # if epoch == 1:
-                    print('advantages', advantages, 'log_prob', log_prob, 'rollout_data.old_log_prob', rollout_data.old_log_prob)
-                    print('policy_loss', policy_loss)
-                    policy_loss.backward()
-                    for name, param in self.policy.named_parameters():
-                        if param.requires_grad:
-                            if param.grad is None:
-                                print(name, None)
-                            else:
-                                # layer_param_sum = round(param.data.sum().item(), 4)
-                                # print(f"{name}'s sum = {layer_param_sum}")
-                                layer_grad_sum = round(param.grad.sum().item(), 4)
-                                print(f"{name}'s grad sum = {layer_grad_sum}")
-                    import sys; sys.exit(0)
+                    # print('advantages', advantages, 'log_prob', log_prob, 'rollout_data.old_log_prob', rollout_data.old_log_prob)
+                    # print('policy_loss', policy_loss)
+                    # policy_loss.backward()
+                    # for name, param in self.policy.named_parameters():
+                    #     if param.requires_grad:
+                    #         if param.grad is None:
+                    #             print(name, None)
+                    #         else:
+                    #             # layer_param_sum = round(param.data.sum().item(), 4)
+                    #             # print(f"{name}'s sum = {layer_param_sum}")
+                    #             layer_grad_sum = round(param.grad.sum().item(), 4)
+                    #             print(f"{name}'s grad sum = {layer_grad_sum}")
+                    # print('exiting')
+                    # import sys; sys.exit(0)
 
                 # Logging
                 pg_losses.append(policy_loss.item())
@@ -309,6 +311,10 @@ class PPO(OnPolicyAlgorithm):
         explained_var = explained_variance(self.rollout_buffer.values.flatten(), self.rollout_buffer.returns.flatten())
 
         # Logs
+        print('self.logger', self.logger)
+        print('np.mean(value_losses)', np.mean(value_losses))
+        print('loss.item()', loss.item())
+        print('self._n_updates', self._n_updates)
         self.logger.record("train/entropy_loss", np.mean(entropy_losses))
         self.logger.record("train/policy_gradient_loss", np.mean(pg_losses))
         self.logger.record("train/value_loss", np.mean(value_losses))

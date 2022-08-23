@@ -149,8 +149,8 @@ class A2C(OnPolicyAlgorithm):
 
             # Policy gradient loss
             policy_loss = -(advantages * log_prob).mean()
-            if False:
-            # if True:
+            # if False:
+            if True:
                 print('advantages', advantages, 'log_prob', log_prob)
                 print('policy_loss', policy_loss)
                 policy_loss.backward()

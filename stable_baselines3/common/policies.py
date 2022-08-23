@@ -332,10 +332,14 @@ class BasePolicy(BaseModel):
         # Switch to eval mode (this affects batch norm / dropout)
         self.set_training_mode(False)
 
+        # print('BasePolicy.predict; observation', type(observation), observation.shape, observation.dtype)
+
         observation, vectorized_env = self.obs_to_tensor(observation)
+        # print('observation', type(observation), observation.size(), observation.dtype)
 
         with th.no_grad():
             actions = self._predict(observation, deterministic=deterministic)
+        # print('actions', type(actions), actions.size(), actions.dtype)
         # Convert to numpy, and reshape to the original action shape
         actions = actions.cpu().numpy().reshape((-1,) + self.action_space.shape)
 

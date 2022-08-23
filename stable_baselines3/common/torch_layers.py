@@ -84,8 +84,10 @@ class NatureCNN(BaseFeaturesExtractor):
         )
 
         # Compute shape by doing one forward pass
+        inputs = th.as_tensor(observation_space.sample()[None]).float()
+        print('inputs', inputs.size(), inputs.dtype, inputs.min(), inputs.max())
         with th.no_grad():
-            n_flatten = self.cnn(th.as_tensor(observation_space.sample()[None]).float()).shape[1]
+            n_flatten = self.cnn(inputs).shape[1]
 
         self.linear = nn.Sequential(nn.Linear(n_flatten, features_dim), nn.ReLU())
 
