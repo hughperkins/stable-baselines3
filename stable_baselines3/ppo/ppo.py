@@ -209,9 +209,9 @@ class PPO(OnPolicyAlgorithm):
                 values, log_prob, entropy = self.policy.evaluate_actions(rollout_data.observations, actions)
                 values = values.flatten()
                 # Normalize advantage
-                advantages = rollout_data.advantages
+                advantages_unnormalized = rollout_data.advantages
                 if self.normalize_advantage:
-                    advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+                    advantages = (advantages_unnormalized - advantages_unnormalized.mean()) / (advantages_unnormalized.std() + 1e-8)
 
                 # ratio between old and new policy, should be one at the first iteration
                 ratio = th.exp(log_prob - rollout_data.old_log_prob)
@@ -267,7 +267,26 @@ class PPO(OnPolicyAlgorithm):
 
                 # Optimization step
                 self.policy.optimizer.zero_grad()
+
+                # for exception diagnosis:
+                self.last_diag_state = dict(
+                    policy_loss=policy_loss.cpu().detach(),
+                    entropy_loss=entropy_loss.cpu().detach(),
+                    value_loss=value_loss.cpu().detach(),
+                    advantages_unnormalized=advantages_unnormalized.cpu().detach(),
+                    advantages=advantages.cpu().detach(),
+                    advantages_unnormalized_mean=advantages_unnormalized.mean().cpu().detach(),
+                    advantages_unnormalized_std=advantages_unnormalized.std().cpu().detach(),
+                    advantages_mean=advantages.mean().cpu().detach(),
+                    advantages_std=advantages.std().cpu().detach(),
+                    log_prob=log_prob.cpu().detach(),
+                    old_log_prob=rollout_data.old_log_prob.cpu().detach(),
+                    ratio=ratio.cpu().detach()
+                )
+
                 loss.backward()
+                if '__trigger_exception__' in self.__dict__:
+                    raise Exception('FakeTriggeredExceptionForTest')
                 # Clip grad norm
                 th.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.policy.optimizer.step()
